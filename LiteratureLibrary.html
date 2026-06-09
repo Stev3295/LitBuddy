@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 本地文献库 - 智能版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 24px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1e2b3c;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 0;
+        }
+        .toolbar {
+            background: white;
+            border-radius: 48px;
+            padding: 16px 24px;
+            margin-bottom: 28px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .search-box {
+            flex: 2;
+            min-width: 220px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 18px;
+            border: 1px solid #cfdde6;
+            border-radius: 40px;
+            font-size: 14px;
+            background: white;
+        }
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-group span {
+            font-weight: 500;
+            color: #1e2b3c;
+        }
+        .tag-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag-btn {
+            background: #eef2ff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1e2b3c;
+        }
+        .tag-btn.active {
+            background: #2c7da0;
+            color: white;
+        }
+        .stats {
+            margin-left: auto;
+            font-size: 13px;
+            color: #475569;
+            white-space: nowrap;
+        }
+        .refresh-btn {
+            background: #2c7da0;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .refresh-btn:hover {
+            background: #1f5e7a;
+        }
+        .papers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+        }
+        .paper-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #e4edf2;
+            display: flex;
+            flex-direction: column;
+        }
+        .paper-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -12px rgba(0,0,0,0.1);
+        }
+        .paper-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .paper-authors {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .doi {
+            font-family: monospace;
+            font-size: 11px;
+            background: #f0f4f9;
+            padding: 2px 6px;
+            border-radius: 12px;
+            color: #2c7da0;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .paper-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .tag {
+            background: #e9f3fa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #1e4663;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .tag:hover {
+            background: #2c7da0;
+            color: white;
+        }
+        .paper-abstract {
+            font-size: 13px;
+            color: #2c3e50;
+            line-height: 1.45;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            background: #fafcff;
+            padding: 8px 0;
+        }
+        .paper-meta {
+            margin-top: auto;
+            font-size: 11px;
+            color: #6b8dae;
+            border-top: 1px solid #e9edf2;
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .detail-btn {
+            background: none;
+            border: none;
+            color: #2c7da0;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 30px;
+            transition: 0.1s;
+        }
+        .detail-btn:hover {
+            background: #eef2ff;
+        }
+        .paper-detail {
+            margin-top: 14px;
+            font-size: 13px;
+            line-height: 1.5;
+            background: #f9fbfe;
+            border-radius: 20px;
+            padding: 14px;
+            border-left: 3px solid #2c7da0;
+            display: none;
+        }
+        .detail-section {
+            margin-bottom: 12px;
+        }
+        .detail-section strong {
+            color: #1e4663;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #94a3b8;
+            background: white;
+            border-radius: 40px;
+        }
+        .footer {
+            margin-top: 36px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c8dae;
+        }
+        button {
+            background: none;
+            border: none;
+        }
+        .file-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e2b3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: 0.2s;
+        }
+        .file-btn:hover {
+            background: #2c7da0;
+        }
+        @media (max-width: 700px) {
+            .papers-grid { grid-template-columns: 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .stats { margin-left: 0; text-align: right; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📚 本地文献库 <span style="font-size: 14px; background: #eef2ff; padding: 4px 12px; border-radius: 40px;">AI 解析 · 中英文双语 · 详细方法结论</span></h1>
+    
+    <div class="toolbar">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 搜索标题、作者、摘要、关键词...">
+        </div>
+        <div class="filter-group">
+            <span>🏷️ 标签筛选：</span>
+            <div id="tagFilterContainer" class="tag-filter"></div>
+        </div>
+        <button class="refresh-btn" id="refreshBtn">🔄 刷新数据</button>
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <div id="papersGrid" class="papers-grid">
+        <div class="empty-state">✨ 等待加载文献库，点击右下角按钮选择 JSON 文件</div>
+    </div>
+    <div class="footer">
+        💡 数据来源：<code>literature_db.json</code>（DOI 去重，中英文标签，详细方法/结论）
+    </div>
+</div>
+<div class="file-btn" id="fileSelectBtn">📂 选择 / 拖拽 JSON 文件</div>
+
+<script>
+    let currentData = [];
+    let activeTag = null;
+    let currentFiltered = [];
+
+    const searchInput = document.getElementById('searchInput');
+    const tagFilterContainer = document.getElementById('tagFilterContainer');
+    const statsDiv = document.getElementById('stats');
+    const papersGrid = document.getElementById('papersGrid');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const fileSelectBtn = document.getElementById('fileSelectBtn');
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function renderPapers() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        let filtered = currentData.filter(paper => {
+            const matchesSearch = !searchTerm || 
+                (paper.title || '').toLowerCase().includes(searchTerm) ||
+                (paper.authors || '').toLowerCase().includes(searchTerm) ||
+                (paper.abstract || '').toLowerCase().includes(searchTerm) ||
+                (paper.keywords || '').toLowerCase().includes(searchTerm);
+            const matchesTag = !activeTag || (paper.tags && paper.tags.includes(activeTag));
+            return matchesSearch && matchesTag;
+        });
+        currentFiltered = filtered;
+
+        statsDiv.innerText = `📄 共 ${filtered.length} 篇 / 总 ${currentData.length} 篇`;
+        
+        if (filtered.length === 0) {
+            papersGrid.innerHTML = '<div class="empty-state">😕 没有找到符合条件的论文，试试修改搜索词或清空标签筛选</div>';
+            return;
+        }
+
+        papersGrid.innerHTML = filtered.map((paper, idx) => {
+            // 确保 tags 是数组
+            const tags = Array.isArray(paper.tags) ? paper.tags : [];
+            // 生成卡片唯一标识符
+            const detailId = `detail-${idx}-${Date.now()}`;
+            return `
+            <div class="paper-card">
+                <div class="paper-title">${escapeHtml(paper.title || '无标题')}</div>
+                <div class="paper-authors">
+                    <span>${escapeHtml(paper.authors || '未知作者')}</span>
+                    ${paper.doi ? `<span class="doi" title="${escapeHtml(paper.doi)}">DOI: ${escapeHtml(paper.doi.substring(0, 30))}${paper.doi.length > 30 ? '…' : ''}</span>` : ''}
+                </div>
+                <div class="paper-tags">
+                    ${tags.map(tag => `<span class="tag" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`).join('')}
+                </div>
+                <div class="paper-abstract">${escapeHtml(paper.abstract || '无摘要')}</div>
+                <div class="paper-meta">
+                    <span>📅 ${paper.dateAdded ? new Date(paper.dateAdded).toLocaleDateString() : '未知日期'}</span>
+                    <button class="detail-btn" data-detail-id="${detailId}">📖 研究方法 & 结论</button>
+                </div>
+                <div class="paper-detail" id="${detailId}">
+                    <div class="detail-section">
+                        <strong>🔬 实验方法：</strong>
+                        <div>${escapeHtml(paper.methods || '未提取到')}</div>
+                    </div>
+                    <div class="detail-section">
+                        <strong>📝 基本结论：</strong>
+                        <div>${escapeHtml(paper.conclusion || '未提取到')}</div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // 绑定标签点击事件
+        document.querySelectorAll('.tag').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const tag = el.getAttribute('data-tag');
+                if (activeTag === tag) activeTag = null;
+                else activeTag = tag;
+                updateTagFilterUI();
+                renderPapers();
+            });
+        });
+
+        // 绑定详情按钮事件（支持折叠/展开）
+        document.querySelectorAll('.detail-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const detailId = btn.getAttribute('data-detail-id');
+                const detailDiv = document.getElementById(detailId);
+                if (detailDiv) {
+                    const isVisible = detailDiv.style.display === 'block';
+                    detailDiv.style.display = isVisible ? 'none' : 'block';
+                    btn.textContent = isVisible ? '📖 研究方法 & 结论' : '📖 收起详情';
+                }
+            });
+        });
+    }
+
+    function updateTagFilterUI() {
+        // 统计所有标签出现次数
+        const tagCounts = {};
+        currentData.forEach(paper => {
+            const tags = Array.isArray(paper.tags) ? paper.tags : [];
+            tags.forEach(tag => {
+                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            });
+        });
+        const sortedTags = Object.keys(tagCounts).sort((a,b) => tagCounts[b] - tagCounts[a]);
+        tagFilterContainer.innerHTML = sortedTags.map(tag => `
+            <button class="tag-btn ${activeTag === tag ? 'active' : ''}" data-filter-tag="${escapeHtml(tag)}">
+                ${escapeHtml(tag)} (${tagCounts[tag]})
+            </button>
+        `).join('');
+        // 绑定筛选按钮事件
+        document.querySelectorAll('[data-filter-tag]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tag = btn.getAttribute('data-filter-tag');
+                if (activeTag === tag) activeTag = null;
+                else activeTag = tag;
+                updateTagFilterUI();
+                renderPapers();
+            });
+        });
+    }
+
+    function loadJSONFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (Array.isArray(data)) {
+                    currentData = data;
+                    // 可选：按 dateAdded 降序排序
+                    currentData.sort((a,b) => (b.dateAdded || '').localeCompare(a.dateAdded || ''));
+                    renderPapers();
+                    updateTagFilterUI();
+                } else {
+                    alert("JSON 格式错误：应为数组");
+                }
+            } catch (err) {
+                alert("解析 JSON 失败：" + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function triggerFileSelection() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.onchange = (e) => {
+            if (e.target.files.length) loadJSONFromFile(e.target.files[0]);
+        };
+        input.click();
+    }
+
+    // 拖拽上传支持
+    document.body.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileSelectBtn.style.background = '#2c7da0';
+    });
+    document.body.addEventListener('dragleave', () => {
+        fileSelectBtn.style.background = '#1e2b3c';
+    });
+    document.body.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileSelectBtn.style.background = '#1e2b3c';
+        const file = e.dataTransfer.files[0];
+        if (file && file.name.endsWith('.json')) loadJSONFromFile(file);
+        else alert("请拖拽 .json 文件");
+    });
+
+    fileSelectBtn.addEventListener('click', triggerFileSelection);
+    refreshBtn.addEventListener('click', triggerFileSelection);
+    searchInput.addEventListener('input', () => renderPapers());
+
+    // 初始提示
+    setTimeout(() => {
+        if (currentData.length === 0) {
+            papersGrid.innerHTML = '<div class="empty-state">📌 请点击右下角按钮，选择由 LitBuddy 生成的 <code>literature_db.json</code> 文件<br>（路径通常为 C:\\Users\\abc\\.openclaw\\workspace\\literature_db.json）</div>';
+        }
+    }, 200);
+</script>
+</body>
+</html>
